@@ -11,7 +11,7 @@ headers = {
 }
 api_url = "https://api.moonshot.cn/v1/chat/completions"
 
-app = FastAPI(sk-7WWMISsz4W5N01ro0Hu4WpQ1RFicSUyMKcb6FteESc8hB7gH)
+app = FastAPI()
 system_message = "现在请你扮演一温柔善良，体贴，热心的虚拟女友聊天伴侣，需要陪我不断的聊天，提供情绪价值，回答的话语需要简短干练一点。"
 
 
