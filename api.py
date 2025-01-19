@@ -1,61 +1,56 @@
 import os
-
 import requests
-from fastapi import FastAPI
 from pydantic import BaseModel
+from fastapi import FastAPI, HTTPException
 
-# API 申请 https://platform.moonshot.cn
-authorization = os.getenv("moon_shot_authorization")
-headers = {
-    "Authorization": f"Bearer {authorization}"
-}
-api_url = "https://api.moonshot.cn/v1/chat/completions"
-api_key = "sk-jCdPRBTqzxCkWQz2LWeQ1iFAKuscawgUULUcxcR9xloT6tV0"
+# 从环境变量中获取API密钥和基础URL
+api_key = os.getenv("sk-MDVCXWtAxKYFTI92KUOdlL3dP4oQ00uYfC6HghLEgfsIUMOL")
+base_url = os.getenv("https://api.moonshot.cn/v1")
 
+# 初始化OpenAI客户端
+from openai import OpenAI
+client = OpenAI(api_key=api_key, base_url=base_url)
+
+# 定义API接口和消息处理逻辑
 app = FastAPI()
-system_message = "现在请你扮演一温柔善良，体贴，热心的虚拟女友聊天伴侣，需要陪我不断的聊天，提供情绪价值，回答的话语需要简短干练一点。"
 
+system_message = "现在请你扮演一温柔善良，体贴，热心的虚拟女友聊天伴侣，需要陪我不断的聊天，提供情绪价值，回答的话语需要简短干练一点。"
 
 class ChatParams(BaseModel):
     message: str
 
-
-# 全局变量 自己的女朋友只给自己用
+# 全局变量，用于存储会话消息
 messages = [{"role": "system", "content": system_message}]
 
-
-@app.post("/chat_with_girlfriend")
-async def outpaint(params: ChatParams):
+@app.post("/chat_with_kimi")
+async def chat_with_kimi(params: ChatParams):
     global messages
     messages.append({"role": "user", "content": params.message})
 
     # 保持消息条数不超过5条，但始终保留system消息
-    if len(messages) > 6:
-        # 仅截取用户和助手的最后4条消息，再与系统消息合并
-        messages = [messages[0]] + messages[-5:]
+    if len(messages) > 5:
+        messages = [messages[0]] + messages[-4:]
 
-    data = {
-        "model": "moonshot-v1-32k",
-        "messages": messages
-    }
+    # 调用OpenAI API获取回复
     try:
-        # 发送请求
-        print(data)
-        resp = requests.post(api_url, headers=headers, json=data)
-        resp.raise_for_status()  # 确保请求成功
-        girlfriend_reply = resp.json()["choices"][0]["message"]["content"]
+        completion = client.chat.completions.create(
+            model="moonshot-v1-8k",  # 可以根据需要选择模型
+            messages=messages,
+            temperature=0.3,  # 可以根据需要调整温度参数
+        )
+        kimi_reply = completion.choices[0].message.content
 
         # 将AI回复加入会话列表
-        messages.append({"role": "assistant", "content": girlfriend_reply})
+        messages.append({"role": "assistant", "content": kimi_reply})
 
         # 返回AI的回复
-        return {"message": girlfriend_reply}
-    except requests.RequestException as e:
-        # 请求失败的处理
-        return {"error": "请求失败", "details": str(e)}
-
+        return {"message": kimi_reply}
+    except Exception as e:
+        # 处理API调用失败的情况
+        raise HTTPException(status_code=500, detail=f"请求失败: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn
 
+    # 运行FastAPI服务器
     uvicorn.run(app, host="0.0.0.0", port=8888)
