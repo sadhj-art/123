@@ -2,10 +2,9 @@ import os
 import requests
 from pydantic import BaseModel
 from fastapi import FastAPI, HTTPException
-
 # 从环境变量中获取API密钥和基础URL
 api_key = ("sk-MDVCXWtAxKYFTI92KUOdlL3dP4oQ00uYfC6HghLEgfsIUMOL")
-base_url = os.getenv("https://api.moonshot.cn/v1")
+base_url = os.getenv("MOONSHOT_BASE_URL", "https://api.moonshot.cn/v1")
 
 # 初始化OpenAI客户端
 from openai import OpenAI
@@ -13,6 +12,16 @@ client = OpenAI(api_key=api_key, base_url=base_url)
 
 # 定义API接口和消息处理逻辑
 app = FastAPI()
+
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # 生产环境建议限制具体域名
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 system_message = "现在请你扮演一温柔善良，体贴，热心的虚拟女友聊天伴侣，需要陪我不断的聊天，提供情绪价值，回答的话语需要简短干练一点。"
 
