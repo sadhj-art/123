@@ -3,8 +3,8 @@ import requests
 from pydantic import BaseModel
 from fastapi import FastAPI, HTTPException
 # 从环境变量中获取API密钥和基础URL
-api_key = os.getenv("MOONSHOT_API_KEY", "默认密钥（可选）")
-base_url = os.getenv("MOONSHOT_BASE_URL", "https://api.moonshot.cn/v1")
+api_key = os.getenv("MOONSHOT_API_KEY",)
+base_url = os.getenv("MOONSHOT_BASE_URL")
 
 # 初始化OpenAI客户端
 from openai import OpenAI
